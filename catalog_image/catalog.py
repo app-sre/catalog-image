@@ -1,6 +1,6 @@
 import os
+import shutil
 import yaml
-import re
 
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -58,7 +58,10 @@ class Bundle(object):
 
     @replaces.setter
     def replaces(self, val):
-        self.csv['spec']['replaces'] = val
+        if val is None:
+            self.csv['spec'].pop('replaces', None)
+        else:
+            self.csv['spec']['replaces'] = val
 
 
 class Catalog(object):
@@ -94,6 +97,24 @@ class Catalog(object):
             pass
 
         return bundles
+
+    def bundle_exists(self, bundle):
+        bundle_names = [b.name for b in self.bundles]
+        return bundle.name in bundle_names
+
+    def add_bundle(self, source_bundle):
+        target_bundle_path = os.path.join(self.path, source_bundle.version)
+        shutil.copytree(source_bundle.path, target_bundle_path)
+
+        bundle = Bundle(target_bundle_path)
+        bundle.replaces = self.current_csv
+        bundle.dump()
+        self.bundles.append(bundle)
+
+        self.set_current_csv(bundle.name)
+        self.dump()
+
+        return bundle
 
     def is_bundle_valid(self, bundle):
         return bundle.check(self.name)

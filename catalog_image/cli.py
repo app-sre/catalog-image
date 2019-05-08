@@ -100,43 +100,30 @@ def current_csv(ctx, remove_temp_dir):
 @run.command()
 @click.option('--remove-temp-dir/--no-remove-temp-dir', default=True)
 @click.option('--push/--no-push', default=True)
+@click.option('--prune')
 @click.argument('bundle_path', type=click.Path(exists=True, file_okay=False))
 @click.pass_context
-def add_bundle(ctx, remove_temp_dir, push, bundle_path):
+def add_bundle(ctx, remove_temp_dir, push, prune, bundle_path):
     config = ctx.obj['config']
     author = git.Actor(config['git-name'], config['git-email'])
     channel = config['channel']
 
-    bundle = Bundle(bundle_path)
+    source_bundle = Bundle(bundle_path)
 
     with clone_repo(config, remove_temp_dir) as repo_dir:
         path = os.path.join(repo_dir, config['component'])
 
         catalog = Catalog(path, channel)
 
-        if not catalog.is_bundle_valid(bundle):
+        if catalog.bundle_exists(source_bundle):
+            click.echo("Bundle already exists", err=True)
+            sys.exit(1)
+
+        if not catalog.is_bundle_valid(source_bundle):
             click.echo("Invalid bundle", err=True)
             sys.exit(1)
 
-        bundle_target_path = os.path.join(
-            repo_dir, config['component'], bundle.version)
-
-        if os.path.isdir(bundle_target_path):
-            click.echo("Bundle target path already exists: {}".format(
-                os.path.join(config['component'], bundle.version)), err=True)
-            sys.exit(1)
-
-        shutil.copytree(bundle_path, bundle_target_path)
-
-        # add replaces
-        bundle = Bundle(bundle_target_path)
-        if catalog.current_csv is not None:
-            bundle.replaces = catalog.current_csv
-        bundle.dump()
-
-        # update package
-        catalog.set_current_csv(bundle.name)
-        catalog.dump()
+        bundle = catalog.add_bundle(source_bundle)
 
         repo = git.Repo(repo_dir)
         repo.git.add(A=True)
