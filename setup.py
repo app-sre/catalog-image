@@ -15,7 +15,7 @@ setup(
 
     install_requires=[
         "Click==7.0",
-        "PyYAML==5.1",
+        "PyYAML>=3.10",
         "GitPython==2.1.11",
     ],
 
