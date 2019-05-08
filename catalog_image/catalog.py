@@ -1,5 +1,9 @@
 import os
 import yaml
+import re
+
+import logging
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 
 class Bundle(object):
@@ -24,6 +28,21 @@ class Bundle(object):
 
         with open(csv_path, 'w') as f:
             yaml.safe_dump(self.csv, f, default_flow_style=False)
+
+    def check(self, catalog_name):
+        if not self.name.startswith(catalog_name):
+            logging.error("Invalid .metadata.name")
+            return False
+
+        csv_name_tpl = '{}-operator.v{}.clusterserviceversion.yaml'
+        expected_csv_filename = csv_name_tpl.format(catalog_name, self.version)
+        if self.csv_filename != expected_csv_filename:
+            logging.error(["Invalid CSV filename",
+                           self.csv_filename,
+                           expected_csv_filename])
+            return False
+
+        return True
 
     @property
     def name(self):
@@ -77,7 +96,7 @@ class Catalog(object):
         return bundles
 
     def is_bundle_valid(self, bundle):
-        return bundle.name.startswith(self.package()['packageName'])
+        return bundle.check(self.name)
 
     def dump(self):
         with open(self.package_filename, 'w') as f:
