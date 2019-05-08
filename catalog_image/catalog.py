@@ -43,46 +43,57 @@ class Bundle(object):
 
 
 class Catalog(object):
-    name = None
-    package = None
-    package_filename = None
-    bundles = []
-
-    def __init__(self, path):
+    def __init__(self, path, channel):
         self.name = os.path.basename(path)
         self.path = path
-        self.load()
+        self.channel = channel
 
-    def load(self):
-        for entry in os.listdir(self.path):
-            full_path = os.path.join(self.path, entry)
+        self.package_filename = os.path.join(
+            self.path, self.name + '.package.yaml')
+        self.current_csv = self.get_current_csv()
+        self.bundles = self.get_bundles()
 
-            if entry.endswith(".package.yaml"):
-                self.package_filename = entry
-                with open(full_path, 'r') as f:
-                    self.package = yaml.load(f, Loader=yaml.CLoader)
-            elif os.path.isdir(full_path):
-                self.bundles.append(Bundle(full_path))
+    def package(self):
+        return {
+            'packageName': self.package_name,
+            'channels': [
+                {
+                    'name': self.channel,
+                    'currentCSV': self.current_csv
+                }
+            ]
+        }
 
-    def dump(self):
-        package_filename = os.path.join(self.path, self.package_filename)
+    def get_bundles(self):
+        bundles = []
+        try:
+            for entry in os.listdir(self.path):
+                full_path = os.path.join(self.path, entry)
+                if os.path.isdir(full_path):
+                    bundles.append(Bundle(full_path))
+        except OSError:
+            pass
 
-        with open(package_filename, 'w') as f:
-            yaml.safe_dump(self.package, f, default_flow_style=False)
+        return bundles
 
     def is_bundle_valid(self, bundle):
-        return bundle.name.startswith(self.package['packageName'])
+        return bundle.name.startswith(self.package()['packageName'])
+
+    def dump(self):
+        with open(self.package_filename, 'w') as f:
+            yaml.safe_dump(self.package(), f, default_flow_style=False)
 
     @property
     def package_name(self):
-        return self.package['packageName']
+        return '{}-operator'.format(self.name)
 
-    def current_csv(self, channel):
-        for c in self.package['channels']:
-            if c['name'] == channel:
-                return c['currentCSV']
+    def get_current_csv(self):
+        try:
+            with open(self.package_filename, 'r') as f:
+                content = yaml.load(f, Loader=yaml.CLoader)
+                return content['channels'][0]['currentCSV']
+        except IOError:
+            return None
 
-    def set_current_csv(self, channel, csv):
-        for c in self.package['channels']:
-            if c['name'] == channel:
-                c['currentCSV'] = csv
+    def set_current_csv(self, csv):
+        self.current_csv = csv

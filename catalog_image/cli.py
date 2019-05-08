@@ -44,7 +44,7 @@ def check_config_file(config):
     required_keys = [
         'git-url',
         'git-branch',
-        'catalog-dir',
+        'component',
         'git-token',
         'git-name',
         'git-email',
@@ -63,7 +63,7 @@ def check_config_file(config):
 
 def load_config(config_file, params):
     with open(config_file, 'r') as f:
-        config = yaml.safe_load(f)
+        config = yaml.load(f, Loader=yaml.CLoader)
 
     for key, value in params.items():
         if value is not None:
@@ -90,8 +90,11 @@ def current_csv(ctx, remove_temp_dir):
     config = ctx.obj['config']
 
     with clone_repo(config, remove_temp_dir) as repo_dir:
-        catalog = Catalog(os.path.join(repo_dir, config['catalog-dir']))
-        click.echo(catalog.current_csv(config['channel']))
+        path = os.path.join(repo_dir, config['component'])
+        channel = config['channel']
+
+        catalog = Catalog(path, channel)
+        click.echo(catalog.current_csv)
 
 
 @run.command()
@@ -102,35 +105,37 @@ def current_csv(ctx, remove_temp_dir):
 def add_bundle(ctx, remove_temp_dir, push, bundle_path):
     config = ctx.obj['config']
     author = git.Actor(config['git-name'], config['git-email'])
+    channel = config['channel']
 
     bundle = Bundle(bundle_path)
 
     with clone_repo(config, remove_temp_dir) as repo_dir:
-        catalog = Catalog(os.path.join(repo_dir, config['catalog-dir']))
+        path = os.path.join(repo_dir, config['component'])
+
+        catalog = Catalog(path, channel)
 
         if not catalog.is_bundle_valid(bundle):
             click.echo("Invalid bundle", err=True)
             sys.exit(1)
 
-        current_csv = catalog.current_csv(config['channel'])
-
         bundle_target_path = os.path.join(
-            repo_dir, config['catalog-dir'], bundle.version)
+            repo_dir, config['component'], bundle.version)
 
         if os.path.isdir(bundle_target_path):
             click.echo("Bundle target path already exists: {}".format(
-                os.path.join(config['catalog-dir'], bundle.version)), err=True)
+                os.path.join(config['component'], bundle.version)), err=True)
             sys.exit(1)
 
         shutil.copytree(bundle_path, bundle_target_path)
 
         # add replaces
         bundle = Bundle(bundle_target_path)
-        bundle.replaces = current_csv
+        if catalog.current_csv is not None:
+            bundle.replaces = catalog.current_csv
         bundle.dump()
 
         # update package
-        catalog.set_current_csv(config['channel'], bundle.name)
+        catalog.set_current_csv(bundle.name)
         catalog.dump()
 
         repo = git.Repo(repo_dir)
