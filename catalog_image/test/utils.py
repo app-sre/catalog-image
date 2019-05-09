@@ -11,10 +11,12 @@ def get_repo_dir(name):
 
 
 @contextmanager
-def clone_repo(repo_name):
+def clone_repo(repo_name=None):
     temp_dir = tempfile.mktemp()
     repo_dir = os.path.join(temp_dir, 'hive')
-    shutil.copytree(get_repo_dir(repo_name), temp_dir)
+
+    if repo_name is not None:
+        shutil.copytree(get_repo_dir(repo_name), temp_dir)
 
     try:
         yield repo_dir

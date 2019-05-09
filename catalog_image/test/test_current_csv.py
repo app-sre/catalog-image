@@ -10,6 +10,6 @@ class TestCurrentCSV(object):
             assert catalog.current_csv == 'hive-operator.v0.1.506-14cff03'
 
     def test_current_csv_empty(self):
-        with clone_repo('empty') as repo_dir:
+        with clone_repo() as repo_dir:
             catalog = Catalog(repo_dir, 'staging')
             assert catalog.current_csv is None
