@@ -9,6 +9,11 @@ import git
 import tempfile
 import yaml
 
+try:
+    yaml_loader = yaml.CLoader
+except AttributeError:
+    yaml_loader = yaml.Loader
+
 
 def check_config_file(config):
     required_keys = [
@@ -33,7 +38,7 @@ def check_config_file(config):
 
 def load_config(config_file, params):
     with open(config_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.CLoader)
+        config = yaml.load(f, Loader=yaml_loader)
 
     for key, value in params.items():
         if value is not None:

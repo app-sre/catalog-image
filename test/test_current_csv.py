@@ -1,6 +1,6 @@
 from catalog_image.catalog import Catalog
 
-from utils import clone_repo
+from .utils import clone_repo
 
 
 class TestCurrentCSV(object):

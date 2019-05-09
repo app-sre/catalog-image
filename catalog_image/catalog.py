@@ -5,6 +5,11 @@ import yaml
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
+try:
+    yaml_loader = yaml.CLoader
+except AttributeError:
+    yaml_loader = yaml.Loader
+
 
 class PruneCSVNotFoundError(Exception):
     pass
@@ -25,7 +30,7 @@ class Bundle(object):
             if entry.endswith(".clusterserviceversion.yaml"):
                 self.csv_filename = entry
                 with open(full_path, 'r') as f:
-                    self.csv = yaml.load(f, Loader=yaml.CLoader)
+                    self.csv = yaml.load(f, Loader=yaml_loader)
 
     def dump(self):
         csv_path = os.path.join(self.path, self.csv_filename)
@@ -147,7 +152,7 @@ class Catalog(object):
         for pruned_bundle in pruned_bundles:
             pruned_bundle.remove()
 
-        self.bundles = bundles_dict.values()
+        self.bundles = list(bundles_dict.values())
 
         self.set_current_csv(b.name)
         self.dump()
@@ -159,7 +164,7 @@ class Catalog(object):
     def get_current_csv(self):
         try:
             with open(self.package_filename, 'r') as f:
-                content = yaml.load(f, Loader=yaml.CLoader)
+                content = yaml.load(f, Loader=yaml_loader)
                 return content['channels'][0]['currentCSV']
         except IOError:
             return None

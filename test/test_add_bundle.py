@@ -1,7 +1,7 @@
 import pytest
 
 from catalog_image.catalog import Catalog, Bundle, PruneCSVNotFoundError
-from utils import clone_repo, fixture_bundle, fixture_repo_dir, dircmp
+from .utils import clone_repo, fixture_bundle, fixture_repo_dir, dircmp
 
 
 class TestAddBundle(object):
