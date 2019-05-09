@@ -9,7 +9,7 @@ from catalog import Catalog, PruneCSVNotFoundError, Bundle
 
 
 @click.group()
-@click.option("--config", type=click.Path())
+@click.option("--config", type=click.Path(), required=True)
 @click.pass_context
 def run(ctx, config, **kwargs):
     ctx.ensure_object(dict)
