@@ -1,13 +1,11 @@
-import os
-
 from catalog_image.catalog import Catalog, Bundle
-from utils import clone_repo, get_repo_dir, dircmp
+from utils import clone_repo, fixture_bundle, fixture_repo_dir, dircmp
 
 
 class TestAddBundle(object):
     def test_add_bundle_from_empty(self):
         with clone_repo() as repo_dir:
-            source_bundle_dir = get_repo_dir('single_csv/hive/0.1.506-14cff03')
+            source_bundle_dir = fixture_bundle('0.1.506-14cff03')
             catalog = Catalog(repo_dir, 'staging')
 
             source_bundle = Bundle(source_bundle_dir)
@@ -16,4 +14,4 @@ class TestAddBundle(object):
             assert source_bundle.name == 'hive-operator.v0.1.506-14cff03'
             assert bundle.name == source_bundle.name
 
-            assert dircmp(os.path.dirname(source_bundle_dir), repo_dir)
+            assert dircmp(fixture_repo_dir('single_csv/hive'), repo_dir)
