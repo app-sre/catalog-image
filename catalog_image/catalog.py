@@ -135,16 +135,17 @@ class Catalog(object):
 
         b = bundles_dict[self.current_csv]
 
-        while True:
-            if b.name == last_valid_csv:
-                break
-
-            b.remove()
+        pruned_bundles = []
+        while b.name != last_valid_csv:
+            pruned_bundles.append(b)
 
             try:
                 b = bundles_dict.pop(b.replaces)
             except KeyError:
                 raise PruneCSVNotFoundError()
+
+        for pruned_bundle in pruned_bundles:
+            pruned_bundle.remove()
 
         self.bundles = bundles_dict.values()
 
