@@ -129,17 +129,19 @@ class Catalog(object):
     def prune_after(self, last_valid_csv):
         bundles_dict = {b.name: b for b in self.bundles}
 
-        b = bundles_dict(self.current_csv)
+        b = bundles_dict[self.current_csv]
 
         while True:
             if b.name == last_valid_csv:
                 break
 
-            b = bundles_dict.pop(b.replaces)
             b.remove()
+            b = bundles_dict.pop(b.replaces)
 
-        self.current_csv = b.name
-        self.bundles = bundles_dict.values
+        self.bundles = bundles_dict.values()
+
+        self.set_current_csv(b.name)
+        self.dump()
 
     @property
     def package_name(self):
