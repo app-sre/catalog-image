@@ -100,10 +100,10 @@ def current_csv(ctx, remove_temp_dir):
 @run.command()
 @click.option('--remove-temp-dir/--no-remove-temp-dir', default=True)
 @click.option('--push/--no-push', default=True)
-@click.option('--prune')
+@click.option('--prune-after')
 @click.argument('bundle_path', type=click.Path(exists=True, file_okay=False))
 @click.pass_context
-def add_bundle(ctx, remove_temp_dir, push, prune, bundle_path):
+def add_bundle(ctx, remove_temp_dir, push, prune_after, bundle_path):
     config = ctx.obj['config']
     author = git.Actor(config['git-name'], config['git-email'])
     channel = config['channel']
@@ -122,6 +122,9 @@ def add_bundle(ctx, remove_temp_dir, push, prune, bundle_path):
         if not catalog.is_bundle_valid(source_bundle):
             click.echo("Invalid bundle", err=True)
             sys.exit(1)
+
+        if prune_after:
+            catalog.prune_after(prune_after)
 
         bundle = catalog.add_bundle(source_bundle)
 

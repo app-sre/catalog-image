@@ -44,6 +44,9 @@ class Bundle(object):
 
         return True
 
+    def remove(self):
+        shutil.rmtree(self.path)
+
     @property
     def name(self):
         return self.csv['metadata']['name']
@@ -122,6 +125,21 @@ class Catalog(object):
     def dump(self):
         with open(self.package_filename, 'w') as f:
             yaml.safe_dump(self.package(), f, default_flow_style=False)
+
+    def prune_after(self, last_valid_csv):
+        bundles_dict = {b.name: b for b in self.bundles}
+
+        b = bundles_dict(self.current_csv)
+
+        while True:
+            if b.name == last_valid_csv:
+                break
+
+            b = bundles_dict.pop(b.replaces)
+            b.remove()
+
+        self.current_csv = b.name
+        self.bundles = bundles_dict.values
 
     @property
     def package_name(self):
