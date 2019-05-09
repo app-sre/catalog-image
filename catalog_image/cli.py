@@ -10,7 +10,7 @@ import click
 import git
 import yaml
 
-from catalog import Catalog, Bundle
+from catalog import Catalog, PruneCSVNotFoundError, Bundle
 
 
 @contextmanager
@@ -124,7 +124,11 @@ def add_bundle(ctx, remove_temp_dir, push, prune_after, bundle_path):
             sys.exit(1)
 
         if prune_after:
-            catalog.prune_after(prune_after)
+            try:
+                catalog.prune_after(prune_after)
+            except PruneCSVNotFoundError:
+                click.echo("Prune CSV not found", err=True)
+                sys.exit(1)
 
         bundle = catalog.add_bundle(source_bundle)
 

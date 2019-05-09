@@ -6,6 +6,10 @@ import logging
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 
+class PruneCSVNotFoundError(Exception):
+    pass
+
+
 class Bundle(object):
     csv = None
     csv_filename = None
@@ -136,7 +140,11 @@ class Catalog(object):
                 break
 
             b.remove()
-            b = bundles_dict.pop(b.replaces)
+
+            try:
+                b = bundles_dict.pop(b.replaces)
+            except KeyError:
+                raise PruneCSVNotFoundError()
 
         self.bundles = bundles_dict.values()
 

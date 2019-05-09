@@ -1,4 +1,6 @@
-from catalog_image.catalog import Catalog, Bundle
+import pytest
+
+from catalog_image.catalog import Catalog, Bundle, PruneCSVNotFoundError
 from utils import clone_repo, fixture_bundle, fixture_repo_dir, dircmp
 
 
@@ -69,3 +71,10 @@ class TestPrune(object):
             assert catalog.current_csv == 'hive-operator.v0.1.700-0000000'
 
             assert dircmp(fixture_repo_dir('prune_plus_bundle/hive'), repo_dir)
+
+    def test_prune_invalid(self):
+        with clone_repo('many_csvs') as repo_dir:
+            catalog = Catalog(repo_dir, 'staging')
+
+            with pytest.raises(PruneCSVNotFoundError):
+                catalog.prune_after("invalid")
