@@ -72,7 +72,8 @@ def add_bundle(ctx, remove_temp_dir, push, prune_after, bundle_path):
             click.echo("No changes detected", err=True)
             sys.exit(1)
 
-        repo.index.commit("Adds {}".format(bundle.name), author=author)
+        repo.index.commit("Adds {}".format(bundle.name),
+                          committer=author, author=author)
 
         if push:
             origin = repo.remote(name='origin')
