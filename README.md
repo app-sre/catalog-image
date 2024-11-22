@@ -1,6 +1,7 @@
 ![](https://img.shields.io/github/license/app-sre/qontract-reconcile.svg?style=flat)
 
 # catalog-image
+> **NOTE:** This repository is archived and deprecated and should not be used for production purposes.
 
 Command to organize [OLM](https://github.com/operator-framework/operator-lifecycle-manager) bundles into a [catalog registry](https://github.com/operator-framework/operator-registry), and stores the state in a Git repo.
 
